@@ -1,5 +1,5 @@
 #include <Uefi.h>
-#include <Library/UefiLIb.h>
+#include <Library/UefiLib.h>
 
 EFI_STATUS EFIAPI UefiMain(
     EFI_HANDLE image_handle,
