@@ -27,5 +27,5 @@
 
 #@range_begin(components)
 [Components]
-  my_mikanos/Loader.inf
+  MikanLoaderPkg/Loader.inf
 #@range_end(components)
