@@ -1,5 +1,9 @@
+SHELL = /bin/bash
+
 TARGET = kernel.elf
 OBJS = main.o
+
+ENV_OSBOOK = $(HOME)/dev/OS_dev/repo/osbook/devenv
 
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone \
             -fno-exceptions -fno-rtti -std=c++17
@@ -16,5 +20,6 @@ kernel.elf: $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o kernel.elf $(OBJS)
 
 %.o: %.cpp Makefile
+	source $(ENV_OSBOOK)/buildenv.sh
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $<
 
