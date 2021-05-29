@@ -4,7 +4,7 @@ EDK2DIR=$(HOMEDIR)/edk2
 ENV_OSBOOK = $(HOME)/dev/OS_dev/repo/osbook/devenv
 
 TARGET = kernel.elf
-OBJS = main.o graphics.o font.o hankaku.o newlib_support.o console.o
+OBJS = main.o graphics.o font.o hankaku.o newlib_support.o console.o pci.o asmfunc.o
 DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
 
 CPPFLAGS=\
@@ -46,6 +46,9 @@ kernel.elf: $(OBJS) Makefile
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 hankaku.bin: hankaku.txt
 	../tools/makefont.py -o $@ $<
+
+%.o: %.asm Makefile
+	nasm -f elf64 -o $@ $<
 
 hankaku.o: hankaku.bin
 	objcopy -I binary -O elf64-x86-64 -B i386:x86-64 $< $@

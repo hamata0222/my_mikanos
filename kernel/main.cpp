@@ -8,19 +8,17 @@
 #include <cstddef>
 #include <cstdio>
 
+#include  "frame_buffer_config.hpp"
 #include  "graphics.hpp"
 #include  "font.hpp"
 #include  "console.hpp"
-
-void* operator new(size_t size, void* buf) {
-  return buf;
-}
+#include  "pci.hpp"
 
 void operator delete(void* obj) noexcept {
 }
 
-const PixelColor kDesktopBGColor = {45, 118, 237};
-const PixelColor kDesktopFGColor = {255, 255, 255};
+const PixelColor kDesktopBGColor{45, 118, 237};
+const PixelColor kDesktopFGColor{255, 255, 255};
 
 const int kMouseCursorWidth = 15;
 const int kMouseCursorHeight = 24;
@@ -42,7 +40,7 @@ const char mouse_cursor_shape[kMouseCursorHeight][kMouseCursorWidth + 1] = {
   "@......@@@@@@@@",
   "@......@       ",
   "@....@@.@      ",
-  "@...@.@.@      ",
+  "@...@ @.@      ",
   "@..@   @.@     ",
   "@.@    @.@     ",
   "@@      @.@    ",
@@ -106,6 +104,18 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
     *pixel_writer, kDesktopFGColor, kDesktopBGColor
   };
   printk("Welcome to MikanOS!\n");
+
+  auto err = pci::ScanAllBus();
+  printk("ScanAllBus: %s\n", err.Name());
+
+  for (int i = 0; i < pci::num_device; ++i) {
+    const auto& dev = pci::devices[i];
+    auto vendor_id = pci::ReadVendorId(dev.bus, dev.device, dev.function);
+    auto class_code = pci::ReadClassCode(dev.bus, dev.device, dev.function);
+    printk("%d.%d.%d: vend %04x, class %08x, head %02x\n",
+        dev.bus, dev.device, dev.function,
+        vendor_id, class_code, dev.header_type);
+  }
 
   for (int dy = 0; dy < kMouseCursorHeight; ++dy) {
     for (int dx = 0; dx < kMouseCursorWidth; ++dx) {
