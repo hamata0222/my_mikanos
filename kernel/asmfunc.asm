@@ -16,5 +16,5 @@ IoOut32:
 global IoIn32     ; uint32_t IoIn32(uint16_t addr);
 IoIn32:
   mov dx, di      ; dx = addr
-  mov dx, di      ; special command `in` to write data into IO port address.
+  in eax, dx      ; special command `in` to write data into IO port address.
   ret
