@@ -2,4 +2,5 @@ kernel.elf
 hankaku.bin
 *.o
 *.d
+tags
 
