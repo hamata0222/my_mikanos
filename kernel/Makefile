@@ -4,7 +4,7 @@ EDK2DIR=$(HOMEDIR)/edk2
 ENV_OSBOOK = $(HOME)/dev/OS_dev/repo/osbook/devenv
 
 TARGET = kernel.elf
-OBJS = main.o graphics.o font.o hankaku.o console.o pci.o mouse.o asmfunc.o logger.o \
+OBJS = main.o graphics.o font.o hankaku.o console.o pci.o mouse.o asmfunc.o logger.o interrupt.o \
        libcxx_support.o newlib_support.o \
        usb/memory.o usb/device.o usb/xhci/ring.o usb/xhci/trb.o usb/xhci/xhci.o \
        usb/xhci/port.o usb/xhci/device.o usb/xhci/devmgr.o usb/xhci/registers.o \
