@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "frame_buffer_config.hpp"
+#include "memory_map.hpp"
 #include "graphics.hpp"
 #include "mouse.hpp"
 #include "font.hpp"
@@ -66,7 +67,7 @@ void SwitchEhci2Xhci(const pci::Device& xhc_dev) {
     }
   }
   if (!intel_ehc_exist) {
-    Log(kInfo, "Intel EHCI does not exist.\n");
+    Log(kDebug, "Intel EHCI does not exist.\n");
     return;
   }
 
@@ -74,7 +75,7 @@ void SwitchEhci2Xhci(const pci::Device& xhc_dev) {
   pci::WriteConfReg(xhc_dev, 0xd8, superspeed_ports); // USB3_PSSEN
   uint32_t ehci2xhci_ports = pci::ReadConfReg(xhc_dev, 0xd4); // XUSB2PRM
   pci::WriteConfReg(xhc_dev, 0xd0, ehci2xhci_ports); // XUSB2PR
-  Log(kInfo, "SwitchEhci2Xhci: SS = %02, xHCI = %02x\n",
+  Log(kDebug, "SwitchEhci2Xhci: SS = %02, xHCI = %02x\n",
       superspeed_ports, ehci2xhci_ports);
 }
 
@@ -94,7 +95,8 @@ void IntHandlerXHCI(InterruptFrame* frame) {
   NotifyEndOfInterrupt();
 }
 
-extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
+extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config,
+                           const MemoryMap& memory_map) {
   switch (frame_buffer_config.pixel_format) {
     case kPixelRGBResv8BitPerColor:
       pixel_writer = new(pixel_writer_buf)
@@ -132,6 +134,29 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   printk("Welcome to MikanOS!\n");
   SetLogLevel(kWarn);
 
+  const std::array available_memory_types {
+    MemoryType::kEfiBootServicesCode,
+    MemoryType::kEfiBootServicesData,
+    MemoryType::kEfiConventionalMemory,
+  };
+
+  printk("memory_map: %p\n", &memory_map);
+  for (uintptr_t iter = reinterpret_cast<uintptr_t>(memory_map.buffer);
+       iter < reinterpret_cast<uintptr_t>(memory_map.buffer) + memory_map.map_size;
+       iter += memory_map.descriptor_size) {
+    auto desc = reinterpret_cast<MemoryDescriptor*>(iter);
+    for (int i = 0; i < available_memory_types.size(); ++i) {
+      if (desc->type == available_memory_types[i]) {
+        printk("type = %u, phys = %08lx - %08lx, pages = %lu, attr = %08lx\n",
+            desc->type,
+            desc->physical_start,
+            desc->physical_start + (desc->number_of_pages * 4096) - 1,
+            desc->number_of_pages,
+            desc->attribute);
+      }
+    }
+  }
+
   mouse_cursor = new(mouse_cursor_buf) MouseCursor{
     *pixel_writer, kDesktopBGColor, {300, 200}
   };
@@ -141,13 +166,13 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   ::main_queue = &main_queue;
 
   auto err = pci::ScanAllBus();
-  Log(kInfo, "ScanAllBus: %s\n", err.Name());
+  Log(kDebug, "ScanAllBus: %s\n", err.Name());
 
   for (int i = 0; i < pci::num_device; ++i) {
     const auto& dev = pci::devices[i];
     auto vendor_id = pci::ReadVendorId(dev);
     auto class_code = pci::ReadClassCode(dev.bus, dev.device, dev.function);
-    Log(kInfo, "%d.%d.%d: vend %04x, class %08x, head %02x\n",
+    Log(kDebug, "%d.%d.%d: vend %04x, class %08x, head %02x\n",
         dev.bus, dev.device, dev.function,
         vendor_id, class_code.toByte(), dev.header_type);
   }
@@ -183,9 +208,9 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
 
   // Read BAR (Base Address Register)
   const WithError<uint64_t> xhc_bar = pci::ReadBar(*xhc_dev, 0);
-  Log(kInfo, "ReadBar: %s\n", xhc_bar.error.Name());
+  Log(kDebug, "ReadBar: %s\n", xhc_bar.error.Name());
   const uint64_t xhc_mmio_base = xhc_bar.value & ~static_cast<uint64_t>(0xf);
-  Log(kInfo, "xHC mmio_base = %08lx\n", xhc_mmio_base);
+  Log(kDebug, "xHC mmio_base = %08lx\n", xhc_mmio_base);
 
   // Initialize xHC
   usb::xhci::Controller xhc{xhc_mmio_base};
@@ -195,20 +220,19 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   }
   {
     auto err = xhc.Initialize();
-    Log(kInfo, "xhc.Initialize: %s\n", err.Name());
+    Log(kDebug, "xhc.Initialize: %s\n", err.Name());
   }
 
   Log(kInfo, "xHC starting\n");
   xhc.Run();
 
   ::xhc = &xhc;
-  __asm__("sti");
 
   usb::HIDMouseDriver::default_observer = MouseObserver;
 
   for (int i = 1; i <= xhc.MaxPorts(); ++i) {
     auto port = xhc.PortAt(i);
-    Log(kInfo, "Port %d: IsConnected=%d\n", i, port.IsConnected());
+    Log(kDebug, "Port %d: IsConnected=%d\n", i, port.IsConnected());
 
     if (port.IsConnected()) {
       if (auto err = ConfigurePort(xhc, port)) {
@@ -219,7 +243,7 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
     }
   }
 
-  while (1) {
+  while (true) {
     __asm__("cli");
     if (main_queue.Count() == 0) {
       __asm__("sti\n\thlt");
