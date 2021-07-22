@@ -27,6 +27,7 @@
 #include "interrupt.hpp"
 #include "asmfunc.h"
 #include "queue.hpp"
+#include "segment.hpp"
 
 const PixelColor kDesktopBGColor{45, 118, 237};
 const PixelColor kDesktopFGColor{255, 255, 255};
@@ -138,6 +139,13 @@ extern "C" void KernelMainNewStack(const FrameBufferConfig& frame_buffer_config_
   };
   printk("Welcome to MikanOS!\n");
   SetLogLevel(kWarn);
+
+  SetupSegment();
+
+  const uint16_t kernel_cs = 1 << 3;
+  const uint16_t kernel_ss = 2 << 3;
+  SetDSAll(0);
+  SetCSSS(kernel_cs, kernel_ss);
 
   const std::array available_memory_types {
     MemoryType::kEfiBootServicesCode,
