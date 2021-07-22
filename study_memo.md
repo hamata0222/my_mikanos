@@ -21,3 +21,10 @@ QEMUにとってホストはUbuntuなので、UbuntuのxHCがどうなってい�
 
 ちょっと調べた限り、WSL2でUSBデバイス等のPCIデバイスを直接見る方法がないっぽい。
 マウス等の入力はWindowsが処理しているのか？
+
+# csとssで3bitずらしている理由
+
+レジスタの構造で、セグメントのindexを設定するのがbit3以降だから。
+
+[参考資料]{https://babyron64.hatenablog.com/entry/2017/12/22/210124}
+

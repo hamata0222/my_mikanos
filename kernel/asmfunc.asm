@@ -1,7 +1,7 @@
 ; asmfunc.asm
 ;
 ; System V AMD64 Calling Convention
-; Registers: RDI, RSI, RDX, R8, R9
+; Registers: RDI, RSI, RDX, RCX, R8, R9
 
 bits 64
 section .text
@@ -36,3 +36,14 @@ LoadIDT:
   mov rsp, rbp
   pop rbp
   ret
+
+extern kernel_main_stack
+extern KernelMainNewStack
+
+global KernelMain
+KernelMain:
+  mov rsp, kernel_main_stack + 1024 * 1024
+  call KernelMainNewStack
+.fin:
+  hlt
+  jmp .fin
