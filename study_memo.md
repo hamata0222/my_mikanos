@@ -28,3 +28,12 @@ QEMUにとってホストはUbuntuなので、UbuntuのxHCがどうなってい�
 
 [参考資料]{https://babyron64.hatenablog.com/entry/2017/12/22/210124}
 
+# C++のイテレータについて
+
+``Layer.cpp``の``FindLayer()``にある``std::find_if()``での使われ方がよくわからない。
+``layers_.begin()``と``layers_.end()``は、イテレータらしい。
+イテレータを比較する文が出てくるけど、イテレータを比較するってどういうこと？
+
+# WindowクラスのDrawTo()にwriterを渡す必要があるのか
+
+Windowクラスはメンバ変数としてwriterを持っているのに、DrawTo()で外部のwriterに対してWindowの内容を描画することがるのか？
