@@ -32,7 +32,6 @@
 #include "memory_manager.hpp"
 #include "window.hpp"
 #include "layer.hpp"
-#include "timer.hpp"
 
 char pixel_writer_buf[sizeof(RGBResv8BitPerColorPixelWriter)]; // PixelWriterのインスタンスを配置する領域
 PixelWriter* pixel_writer;
@@ -52,13 +51,8 @@ int printk(const char* format, ...) {
   result = vsprintf(s, format, ap);
   va_end(ap);
 
-  StartLAPICTimer();
   console->PutString(s);
-  auto elapsed = LAPICTimerElapsed();
-  StopLAPICTimer();
 
-  sprintf(s, "[%9d]", elapsed);
-  console->PutString(s);
   return result;
 }
 
@@ -140,8 +134,6 @@ extern "C" void KernelMainNewStack(
   console->SetWriter(pixel_writer);
   printk("Welcome to MikanOS!\n");
   SetLogLevel(kWarn);
-
-  InitializeLAPICTimer();
 
   SetupSegment();
 
