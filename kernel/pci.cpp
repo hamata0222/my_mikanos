@@ -1,6 +1,7 @@
 #include "pci.hpp"
 
 #include "asmfunc.h"
+#include "logger.hpp"
 
 namespace {
   using namespace pci;
@@ -31,12 +32,13 @@ namespace {
       | (reg_addr & 0xfcu);
   }
 
-  Error AddDevice (Device& dev) {
+  /** @brief devices[num_device] に情報を書き込み num_device をインクリメントする． */
+  Error AddDevice (const Device& device) {
     if (num_device == devices.size()) {
       return MAKE_ERROR(Error::kFull);
     }
 
-    devices[num_device] = dev;
+    devices[num_device] = device;
     ++num_device;
 
     return MAKE_ERROR(Error::kSuccess);
@@ -44,6 +46,9 @@ namespace {
 
   Error ScanBus(uint8_t bus);
 
+  /** @brief 指定のファンクションを devices に追加する．
+   * もし PCI-PCI ブリッジなら，セカンダリバスに対し ScanBus を実行する
+   */
   Error ScanFunction(uint8_t bus, uint8_t device, uint8_t function) {
     auto class_code = ReadClassCode(bus, device, function);
     auto header_type = ReadHeaderType(bus, device, function);
@@ -62,6 +67,9 @@ namespace {
     return MAKE_ERROR(Error::kSuccess);
   }
 
+  /** @brief 指定のデバイス番号の各ファンクションをスキャンする．
+   * 有効なファンクションを見つけたら ScanFunction を実行する．
+   */
   Error ScanDevice(uint8_t bus, uint8_t device) {
     if (auto err = ScanFunction(bus, device, 0)) {
       return err;
@@ -82,6 +90,9 @@ namespace {
     return MAKE_ERROR(Error::kSuccess);
   }
 
+  /** @brief 指定のバス番号の各デバイスをスキャンする．
+   * 有効なデバイスを見つけたら ScanDevice を実行する．
+   */
   Error ScanBus(uint8_t bus) {
     for (uint8_t device = 0; device < 32; ++device) {
       if (ReadVendorId(bus, device, 0) == 0xffffu) {
@@ -94,6 +105,11 @@ namespace {
     return MAKE_ERROR(Error::kSuccess);
   }
 
+  /** @brief 指定された MSI ケーパビリティ構造を読み取る
+   *
+   * @param dev  MSI ケーパビリティを読み込む PCI デバイス
+   * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
+   */
   MSICapability ReadMSICapability(const Device& dev, uint8_t cap_addr) {
     MSICapability msi_cap{};
 
@@ -116,6 +132,12 @@ namespace {
     return msi_cap;
   }
 
+  /** @brief 指定された MSI ケーパビリティ構造に書き込む
+   *
+   * @param dev  MSI ケーパビリティを読み込む PCI デバイス
+   * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
+   * @param msi_cap  書き込む値
+   */
   void WriteMSICapability(const Device& dev, uint8_t cap_addr,
                           const MSICapability& msi_cap) {
     WriteConfReg(dev, cap_addr, msi_cap.header.data);
@@ -135,6 +157,7 @@ namespace {
     }
   }
 
+  /** @brief 指定された MSI レジスタを設定する */
   Error ConfigureMSIRegister(const Device& dev, uint8_t cap_addr,
                              uint32_t msg_addr, uint32_t msg_data,
                              unsigned int num_vector_exponent) {
@@ -155,6 +178,7 @@ namespace {
     return MAKE_ERROR(Error::kSuccess);
   }
 
+  /** @brief 指定された MSI レジスタを設定する */
   Error ConfigureMSIXRegister(const Device& dev, uint8_t cap_addr,
                              uint32_t msg_addr, uint32_t msg_data,
                              unsigned int num_vector_exponent) {
@@ -302,5 +326,21 @@ namespace pci {
       msg_data |= 0xc000;
     }
     return ConfigureMSI(dev, msg_addr, msg_data, num_vector_exponent);
+  }
+}
+
+void InitializePCI() {
+  if (auto err = pci::ScanAllBus()) {
+    Log(kError, "ScanAllBus: %s\n", err.Name());
+    exit(1);
+  }
+
+  for (int i = 0; i < pci::num_device; ++i) {
+    const auto& dev = pci::devices[i];
+    auto vendor_id = pci::ReadVendorId(dev);
+    auto class_code = pci::ReadClassCode(dev.bus, dev.device, dev.function);
+    Log(kDebug, "%d.%d.%d: vend %04x, class %08x, head %02x\n",
+        dev.bus, dev.device, dev.function,
+        vendor_id, class_code.toByte(), dev.header_type);
   }
 }

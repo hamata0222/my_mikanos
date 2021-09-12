@@ -13,12 +13,12 @@ void SetCodeSegment(SegmentDescriptor& desc,
                     uint32_t limit) {
   desc.data = 0;
 
-  desc.bits.base_low = base & 0x0fffffu;
+  desc.bits.base_low = base & 0xffffu;
   desc.bits.base_middle = (base >> 16) & 0xffu;
   desc.bits.base_high = (base >> 24) & 0xffu;
 
 
-  desc.bits.limit_low = limit & 0x0fffffu;
+  desc.bits.limit_low = limit & 0xffffu;
   desc.bits.limit_high = (limit >> 16) & 0x0fu;
 
   desc.bits.type = type;
@@ -42,10 +42,16 @@ void SetDataSegment(SegmentDescriptor& desc,
   desc.bits.default_operation_size = 1; // 32-bit stack segment
 }
 
-void SetupSegment() {
+void SetupSegments() {
   gdt[0].data = 0;
   SetCodeSegment(gdt[1], DescriptorType::kExecuteRead, 0, 0, 0x0fffffu);
   SetDataSegment(gdt[2], DescriptorType::kReadWrite, 0, 0, 0x0fffffu);
   LoadGDT(sizeof(gdt) - 1, reinterpret_cast<uintptr_t>(&gdt[0]));
 }
 
+void InitializeSegmentation() {
+  SetupSegments();
+
+  SetDSAll(kKernelDS);
+  SetCSSS(kKernelCS, kKernelSS);
+}

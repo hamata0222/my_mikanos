@@ -29,7 +29,7 @@ void DrawRectangle(PixelWriter& writer, const Vector2D<int>& pos,
 void FillRectangle(PixelWriter& writer, const Vector2D<int>& pos,
                    const Vector2D<int>& size, const PixelColor& c) {
   for (int dy = 0; dy < size.y; ++dy) {
-    for (int dx = 0; dx < size.x; ++dx){
+    for (int dx = 0; dx < size.x; ++dx) {
       writer.Write(pos + Vector2D<int>{dx, dy}, c);
     }
   }
@@ -54,4 +54,37 @@ void DrawDesktop(PixelWriter& writer) {
                 {10, height - 40},
                 {30, 30},
                 {160, 160, 160});
+}
+
+FrameBufferConfig screen_config;
+PixelWriter* screen_writer;
+
+Vector2D<int> ScreenSize() {
+  return {
+    static_cast<int>(screen_config.horizontal_resolution),
+    static_cast<int>(screen_config.vertical_resolution)
+  };
+}
+
+namespace {
+  char pixel_writer_buf[sizeof(RGBResv8BitPerColorPixelWriter)]; // PixelWriterのインスタンスを配置する領域
+}
+
+void InitializeGraphics(const FrameBufferConfig& screen_config) {
+  ::screen_config = screen_config;
+
+  switch (screen_config.pixel_format) {
+    case kPixelRGBResv8BitPerColor:
+      ::screen_writer = new(pixel_writer_buf)
+        RGBResv8BitPerColorPixelWriter{screen_config};
+      break;
+    case kPixelBGRResv8BitPerColor:
+      ::screen_writer = new(pixel_writer_buf)
+        BGRResv8BitPerColorPixelWriter{screen_config};
+      break;
+    default:
+      exit(1);
+  }
+
+  DrawDesktop(*screen_writer);
 }

@@ -48,12 +48,6 @@ struct Vector2D {
   }
 };
 
-template <typename T, typename U>
-auto operator +(const Vector2D<T>& lhs, const Vector2D<U>& rhs)
-    -> Vector2D<decltype(lhs.x + rhs.x)> {
-  return {lhs.x + rhs.x, lhs.y + rhs.y};
-}
-
 template <typename T>
 Vector2D<T> ElementMax(const Vector2D<T>& lhs, const Vector2D<T>& rhs) {
   return {std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y)};
@@ -130,3 +124,9 @@ const PixelColor kDesktopBGColor{45, 118, 237};
 const PixelColor kDesktopFGColor{255, 255, 255};
 
 void DrawDesktop(PixelWriter& writer);
+
+extern FrameBufferConfig screen_config;
+extern PixelWriter* screen_writer;
+Vector2D<int> ScreenSize();
+
+void InitializeGraphics(const FrameBufferConfig& screen_config);
