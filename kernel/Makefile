@@ -6,7 +6,7 @@ ENV_OSBOOK = $(HOME)/dev/OS_dev/repo/osbook/devenv
 TARGET = kernel.elf
 OBJS = main.o graphics.o font.o hankaku.o console.o pci.o mouse.o asmfunc.o logger.o interrupt.o \
        segment.o paging.o memory_manager.o window.o layer.o timer.o \
-       frame_buffer.o \
+       frame_buffer.o acpi.o \
        libcxx_support.o newlib_support.o \
        usb/memory.o usb/device.o usb/xhci/ring.o usb/xhci/trb.o usb/xhci/xhci.o \
        usb/xhci/port.o usb/xhci/device.o usb/xhci/devmgr.o usb/xhci/registers.o \
