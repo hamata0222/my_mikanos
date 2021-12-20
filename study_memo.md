@@ -37,3 +37,6 @@ QEMUにとってホストはUbuntuなので、UbuntuのxHCがどうなってい�
 # WindowクラスのDrawTo()にwriterを渡す必要があるのか
 
 Windowクラスはメンバ変数としてwriterを持っているのに、DrawTo()で外部のwriterに対してWindowの内容を描画することがるのか？
+
+これに対する回答は、Windowクラスが持っているメンバ変数のwriterはあくまでそのWindowクラスの描画領域を疑似的にあらわしたもの。
+DrawTo()で受け取るwriterは、実際の画面の描画領域であり、UEFIからもらった画面のビットマップそのもの。

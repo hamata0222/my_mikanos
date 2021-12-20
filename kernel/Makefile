@@ -1,7 +1,7 @@
-HOMEDIR=$(HOME)/dev/OS_dev/repo
+HOMEDIR=$(HOME)/os_dev
 BASEDIR=$(HOMEDIR)/osbook/devenv/x86_64-elf
-EDK2DIR=$(HOMEDIR)/edk2
-ENV_OSBOOK = $(HOME)/dev/OS_dev/repo/osbook/devenv
+EDK2DIR=$(HOME)/edk2
+ENV_OSBOOK = $(HOMEDIR)/osbook/devenv
 
 TARGET = kernel.elf
 OBJS = main.o graphics.o font.o hankaku.o console.o pci.o mouse.o asmfunc.o logger.o interrupt.o \
