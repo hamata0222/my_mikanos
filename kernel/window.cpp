@@ -2,6 +2,7 @@
 
 #include "logger.hpp"
 #include "font.hpp"
+#include "graphics.hpp"
 
 Window::Window(int width, int height, PixelFormat shadow_format) : width_{width}, height_{height} {
   data_.resize(height);
@@ -99,13 +100,6 @@ namespace {
     "@@@@@@@@@@@@@@@@",
   };
 
-  constexpr PixelColor ToColor(uint32_t c) {
-    return {
-      static_cast<uint8_t>((c >> 16) & 0xff), // R
-      static_cast<uint8_t>((c >> 8) & 0xff),  // G
-      static_cast<uint8_t>(c & 0xff)          // B
-    };
-  }
 }
 
 void DrawWindow(PixelWriter& writer, const char* title) {
