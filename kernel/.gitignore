@@ -3,4 +3,4 @@ hankaku.bin
 *.o
 *.d
 tags
-
+*.swp
