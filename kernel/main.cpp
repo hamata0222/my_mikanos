@@ -64,6 +64,26 @@ void InitializeMainWindow() {
   layer_manager->UpDown(main_window_layer_id, std::numeric_limits<int>::max());
 }
 
+std::shared_ptr<Window> text_window;
+unsigned int text_window_layer_id;
+void InitializeTextWindow() {
+  const int win_w = 160;
+  const int win_h = 52;
+
+  text_window = std::make_shared<Window>(
+      win_w, win_h, screen_config.pixel_format);
+  DrawWindow(*text_window->Writer(), "Text Box Test");
+  DrawTextbox(*text_window->Writer(), {4, 24}, {win_w - 8, win_h - 24 - 4});
+
+  text_window_layer_id = layer_manager->NewLayer()
+    .SetWindow(text_window)
+    .SetDraggable(true)
+    .Move({350, 200})
+    .ID();
+
+  layer_manager->UpDown(text_window_layer_id, std::numeric_limits<int>::max());
+}
+
 std::deque<Message>* main_queue;
 
 alignas(16) uint8_t kernel_main_stack[1024 * 1024];
@@ -90,6 +110,7 @@ extern "C" void KernelMainNewStack(
   usb::xhci::Initialize();
   InitializeLayer();
   InitializeMainWindow();
+  InitializeTextWindow();
   InitializeMouse();
 
   layer_manager->Draw({{0, 0}, ScreenSize()});
