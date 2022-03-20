@@ -118,13 +118,13 @@ void InitializeTaskBWindow() {
   task_b_window = std::make_shared<Window>(160, 52, screen_config.pixel_format);
   DrawWindow(*task_b_window->Writer(), "TaskB Window");
 
-  main_window_layer_id = layer_manager->NewLayer()
+  task_b_window_layer_id = layer_manager->NewLayer()
     .SetWindow(task_b_window)
     .SetDraggable(true)
     .Move({100, 100})
     .ID();
 
-  layer_manager->UpDown(main_window_layer_id, std::numeric_limits<int>::max());
+  layer_manager->UpDown(task_b_window_layer_id, std::numeric_limits<int>::max());
 }
 
 struct TaskContext {
