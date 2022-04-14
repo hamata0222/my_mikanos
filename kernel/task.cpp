@@ -36,8 +36,18 @@ uint64_t Task::ID() const {
   return id_;
 }
 
+Task& Task::Sleep() {
+  task_manager->Sleep(this);
+  return *this;
+}
+
+Task& Task::Wakeup() {
+  task_manager->Wakeup(this);
+  return *this;
+}
+
 TaskManager::TaskManager() {
-  NewTask();
+  running_.push_back(&NewTask());
 }
 
 Task& TaskManager::NewTask() {
