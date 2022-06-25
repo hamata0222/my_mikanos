@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "graphics.hpp"
+#include "message.hpp"
 #include "window.hpp"
 
 /** @brief Layerは一つの層を表す。
@@ -97,4 +98,5 @@ class LayerManager {
 
 extern LayerManager* layer_manager;
 
+void ProcessLayerMessage(const Message& msg);
 void InitializeLayer();

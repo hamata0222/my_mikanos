@@ -4,6 +4,7 @@
 
 #include "logger.hpp"
 #include "console.hpp"
+#include "message.hpp"
 
 Layer::Layer(unsigned int id) : id_{id} {
 }
@@ -207,4 +208,19 @@ void InitializeLayer() {
 
   layer_manager->UpDown(bglayer_id, 0);
   layer_manager->UpDown(console->LayerID(), 1);
+}
+
+void ProcessLayerMessage(const Message& msg) {
+  const auto& arg = msg.arg.layer;
+  switch (arg.op) {
+  case LayerOperation::Move:
+    layer_manager->Move(arg.layer_id, {arg.x, arg.y});
+    break;
+  case LayerOperation::MoveRelative:
+    layer_manager->MoveRelative(arg.layer_id, {arg.x, arg.y});
+    break;
+  case LayerOperation::Draw:
+    layer_manager->Draw(arg.layer_id);
+    break;
+  }
 }
