@@ -58,13 +58,14 @@ void Mouse::SetPosition(Vector2D<int> position) {
 }
 
 void Mouse::OnInterrupt(uint8_t buttons, int8_t displacement_x, int8_t displacement_y) {
+  const auto oldpos = position_;
   auto newpos = position_ + Vector2D<int>{displacement_x, displacement_y};
   newpos = ElementMin(newpos, ScreenSize() + Vector2D<int>{-1, -1});
-  newpos = ElementMax(newpos, {0, 0});
+  position_ = ElementMax(newpos, {0, 0});
 
-  const auto posdiff = newpos - position_;
+  const auto posdiff = position_ - oldpos;
 
-  SetPosition(newpos);
+  layer_manager->Move(layer_id_, position_);
 
   const bool previous_left_pressed = (previous_buttons_ & 0x01);
   const bool left_pressed = (buttons & 0x01);
@@ -72,6 +73,9 @@ void Mouse::OnInterrupt(uint8_t buttons, int8_t displacement_x, int8_t displacem
     auto layer = layer_manager->FindLayerByPosition(position_, layer_id_);
     if (layer && layer->IsDraggable()) {
       drag_layer_id_ = layer->ID();
+      active_layer->Activate(layer->ID());
+    } else {
+      active_layer->Activate(0);
     }
   } else if (previous_left_pressed && left_pressed) {
     if (drag_layer_id_ > 0) {
@@ -96,10 +100,12 @@ void InitializeMouse() {
 
   auto mouse = std::make_shared<Mouse>(mouse_layer_id);
   mouse->SetPosition({200, 200});
-  layer_manager->UpDown(mouse_layer_id, std::numeric_limits<int>::max());
+  layer_manager->UpDown(mouse->LayerID(), std::numeric_limits<int>::max());
 
   usb::HIDMouseDriver::default_observer =
     [mouse](uint8_t buttons, int8_t displacement_x, int8_t displacement_y) {
       mouse->OnInterrupt(buttons, displacement_x, displacement_y);
     };
+
+  active_layer->SetMouseLayer(mouse_layer_id);
 }
